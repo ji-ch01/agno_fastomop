@@ -103,8 +103,8 @@ async def batch_mode(dataset_path, output_path=None):
             query_text = query_item
             query_metadata = {}
         elif isinstance(query_item, dict):
-            query_text = query_item.get("query") or query_item.get("question") or query_item.get("text")
-            query_metadata = {k: v for k, v in query_item.items() if k not in ['query', 'question', 'text']}
+            query_text = query_item.get("query") or query_item.get("question") or query_item.get("text") or query_item.get("input")
+            query_metadata = {k: v for k, v in query_item.items() if k not in ['query', 'question', 'text', 'input']}
         else:
             raise ValueError(f"Invalid query item: {query_item}")
 

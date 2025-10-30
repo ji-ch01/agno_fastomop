@@ -59,7 +59,7 @@ def create_database_agent(mcp_tools: MCPTools) -> Agent:
         instructions=system_prompt,
         tools=[mcp_tools],
         knowledge=knowledge,
-        input_schema=SemanticContext,  # Parse JSON from semantic agent's output
+        # input_schema=SemanticContext,  # Parse JSON from semantic agent's output
         # No output_schema - return natural language for final answer
         session_state= {
             "mcp_client": mcp_tools,
