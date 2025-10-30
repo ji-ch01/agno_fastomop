@@ -36,7 +36,7 @@ name = "OMOP Semantic Agent"
 model_provider = "azure"
 prompt_name = "semantic_agent"
 prompt_label = "dev"
-reasoning = false
+reasoning = false  # Disable reasoning - output_schema enforces JSON, reasoning adds explanatory text
 
 [agents.orchestrator]
 name = "OMOP Orchestrator"

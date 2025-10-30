@@ -44,7 +44,7 @@ def create_semantic_agent(mcp_tools: MCPTools) -> Agent:
         instructions=system_prompt,
         db=db,  # Shared database for conversation history and memory
         tools=[mcp_tools],  # Shared MCP to query concept table
-        # No output_schema - let agent call tools first, then return raw JSON
+        output_schema=SemanticContext,  # Structured output for workflow step passing
         reasoning=agent_config.get("reasoning", False),
         markdown=False,  # Don't format as markdown - return raw JSON
         add_history_to_context=True,  # Enable conversation history

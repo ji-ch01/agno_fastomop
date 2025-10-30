@@ -55,16 +55,21 @@ async def initialize_workflow():
         _omop_workflow = Workflow(
             name="OMOP Clinical Query Workflow",
             db=db,  # Shared database enables conversation history across workflow runs
+            debug_mode=True,  # Enable debug output to see step responses
             steps=[
                 Step(
                     name="Semantic Extraction",
                     agent=semantic_agent,
                     description="Extract clinical concepts and map to OMOP codes",
+                    add_workflow_history=True,  # Pass workflow conversation history to agent
+                    num_history_runs=3,  # Include last 3 workflow runs
                 ),
                 Step(
                     name="SQL Generation and Execution",
                     agent=database_agent,
                     description="Generate SQL from semantic context and execute",
+                    add_workflow_history=True,  # Pass workflow conversation history to agent
+                    num_history_runs=3,  # Include last 3 workflow runs
                 ),
             ],
         )

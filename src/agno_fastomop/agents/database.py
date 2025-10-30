@@ -18,7 +18,7 @@ def create_database_agent(mcp_tools: MCPTools) -> Agent:
     Create omop database agent with shared MCP connection
 
     Args:
-        mcp_tools: Shared MCP connection (to avoid DuckDB lock conflicts)
+        mcp_tools: Shared MCP connection (to avoid DB lock conflicts)
 
     Returns:
         Agent: Agno agent for omop db queries
@@ -64,7 +64,7 @@ def create_database_agent(mcp_tools: MCPTools) -> Agent:
         add_history_to_context=True,  # Enable conversation history
         tools=[mcp_tools],
         knowledge=knowledge,
-        input_schema=SemanticContext,  # Parse JSON from semantic agent's output
+        # No input_schema - the workflow passes previous step output as message content
         # No output_schema - return natural language for final answer
         # session_state only for JSON-serializable data
         session_state= {

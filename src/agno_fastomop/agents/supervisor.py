@@ -45,6 +45,9 @@ async def create_supervisor_agent(mcp_tools: MCPTools) -> Agent:
         name=agent_config["name"],
         model=model,
         instructions=system_prompt,
+        db=db,  # Shared database for conversation history
+        add_history_to_context=True,  # Enable conversation history
+        enable_user_memories=True,  # Enable long-term memory
         tools=[semantic_agent, database_agent],  # Agents can be passed directly as tools
         knowledge=None,
         reasoning=agent_config.get("reasoning", True),

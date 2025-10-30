@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Literal
 class ConceptMapping(BaseModel):
     term: str
     concept_code: Optional[str] = None  # Allow None when concept not found
+    concept_name: Optional[str] = None
     vocabulary_id: Optional[str] = None
     domain_id: Optional[Literal["Condition", "Drug", "Device", "Observation",
                          "Procedure", "Measurement", "Gender",
@@ -34,13 +35,36 @@ class TemporalConstraint(BaseModel):
     class Config:
         extra = "allow"  # Accept novel fields from LLM
 
+
+class AdditionalFilters(BaseModel):
+    """Additional filters for query context.
+
+    For follow-up queries like "How many of these have diabetes?", is_followup signals
+    that the database agent should look at conversation history to find the previous
+    cohort filtering logic and SQL query.
+    """
+    # Signal for follow-up queries - tells DB agent to look at conversation history
+    is_followup: Optional[bool] = False
+
+    # Demographics filters
+    gender: Optional[str] = None
+    age: Optional[int] = None  # Exact age constraint (e.g., "at age 18")
+    age_min: Optional[int] = None
+    age_max: Optional[int] = None
+    race: Optional[str] = None
+
+    class Config:
+        extra = "allow"  # Accept novel fields from LLM
+
+
 class SemanticContext(BaseModel):
     user_query: str
     query_intent: str  # Allow any query type (e.g., "demographics", "distribution", "cohort_analysis", etc.)
+    query_type: Optional[Literal["single", "intersection", "multi_intersection", "union", "demographics"]] = "single"
 
     entities: Optional[List[ConceptMapping]] = []  # Empty for demographics queries
     temporal_constraint: Optional[TemporalConstraint] = None
-    additional_filters: Optional[Dict] = None
+    additional_filters: Optional[AdditionalFilters] = None
 
 class QueryResult(BaseModel):
     sql: str
