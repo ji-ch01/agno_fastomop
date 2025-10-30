@@ -5,6 +5,7 @@ from agno_fastomop.agents.factory import create_model
 from agno_fastomop.config import get_agent_config, config
 from agno_fastomop.agents.semantic import create_semantic_agent
 from agno_fastomop.agents.database import create_database_agent
+from agno.db.sqlite import SqliteDb
 from pathlib import Path
 import os
 
@@ -19,6 +20,9 @@ async def create_supervisor_agent(mcp_tools: MCPTools) -> Agent:
 
     agent_config = get_agent_config("orchestrator")
     model = create_model(agent_config)
+
+    # Shared database for conversation history and memory
+    db = SqliteDb(db_file="db_agent.db")
 
     # Fetch prompt from Langfuse
     try:

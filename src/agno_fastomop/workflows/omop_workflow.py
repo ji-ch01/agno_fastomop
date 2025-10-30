@@ -4,6 +4,7 @@ from agno_fastomop.agents.semantic import create_semantic_agent
 from agno_fastomop.agents.database import create_database_agent
 from agno_fastomop.config import config
 from agno_fastomop.observability.trace_context import write_trace_context_otel, clear_trace_context
+from agno.db.sqlite import SqliteDb
 from langfuse import observe, Langfuse, get_client
 import asyncio
 import os
@@ -43,6 +44,9 @@ async def initialize_workflow():
         # Manually connect MCP once
         await _mcp_tools._connect()
 
+        # Create shared database for conversation history and memory
+        db = SqliteDb(db_file="db_agent.db")
+
         # Create agents with shared MCP - both query the database
         semantic_agent = create_semantic_agent(_mcp_tools)  # Queries concept table
         database_agent = create_database_agent(_mcp_tools)  # Generates & executes SQL
@@ -50,6 +54,7 @@ async def initialize_workflow():
         # Create linear workflow (supports structured output passing)
         _omop_workflow = Workflow(
             name="OMOP Clinical Query Workflow",
+            db=db,  # Shared database enables conversation history across workflow runs
             steps=[
                 Step(
                     name="Semantic Extraction",
@@ -201,21 +206,26 @@ def extract_final_query(workflow_response) -> str:
 
 
 @observe() #Complete langfuse tracing
-async def run_omop_query(user_query: str) -> str:
+async def run_omop_query(user_query: str, session_id: str = None, user_id: str = None) -> str:
     """
     Run OMOP clinical query via Workflow
     Initializes on first call, reuses for subsequent queries
+
+    Args:
+        user_query: The clinical query to process
+        session_id: Session identifier for conversation history
+        user_id: User identifier for personalized memories
     """
     # Inject current OpenTelemetry trace context for OMCP subprocess
     # This uses W3C Trace Context format (traceparent/tracestate)
     try:
-        write_trace_context_otel()
+        write_trace_context_otel(session_id=session_id)
     except Exception as e:
         # Non-critical: if trace context extraction fails, continue without it
         print(f"Warning: Could not inject OpenTelemetry trace context: {e}")
 
     workflow = await initialize_workflow()
-    response = await workflow.arun(user_query)
+    response = await workflow.arun(user_query, session_id=session_id, user_id=user_id)
 
     # Extract final successful query from tool execution history
     try:

@@ -5,14 +5,19 @@ import sys
 from pathlib import Path
 import json
 from datetime import datetime
+from uuid import uuid4
 
 
 async def interactive_session():
-    """Interactive CLI session with persistent agents"""
+    """Interactive CLI session with persistent agents and memory"""
 
     print("Welcome to FastOMOP - the OMOP Clinical Query Workflow")
     print("="*50)
     print("Initializing agents (this may take a moment)...")
+
+    # Generate session and user IDs for memory persistence
+    session_id = str(uuid4())
+    user_id = "default_user"
 
     try:
         # Initialize workflow once
@@ -20,6 +25,7 @@ async def interactive_session():
         await initialize_workflow()
 
         print("Agents initialized! Enter your query or type 'exit' to quit")
+        print(f"Session ID: {session_id}")
         print("="*50)
 
         while True:
@@ -32,7 +38,7 @@ async def interactive_session():
 
             try:
                 print("Processing...")
-                response = await run_omop_query(user_query)
+                response = await run_omop_query(user_query, session_id=session_id, user_id=user_id)
                 print("="*50)
                 print(response.content)
                 print("="*50)
@@ -96,6 +102,11 @@ async def batch_mode(dataset_path, output_path=None):
     print("="*50)
     start_time = datetime.now()
 
+    # Each batch gets its own session (queries within batch share context)
+    session_id = str(uuid4())
+    user_id = "batch_user"
+    print(f"Batch Session ID: {session_id}")
+
     results = []
     for i, query_item in enumerate(queries, 1):
 
@@ -123,7 +134,7 @@ async def batch_mode(dataset_path, output_path=None):
 
         try:
             query_start = datetime.now()
-            result = await run_omop_query(query_text)
+            result = await run_omop_query(query_text, session_id=session_id, user_id=user_id)
             query_end = datetime.now()
 
             result_entry.update({

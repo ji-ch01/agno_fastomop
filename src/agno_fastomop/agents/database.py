@@ -7,6 +7,7 @@ from agno_fastomop.agents.factory import create_model
 from agno_fastomop.config import get_agent_config, config
 from agno.vectordb.lancedb import LanceDb
 from agno.knowledge.embedder.sentence_transformer import SentenceTransformerEmbedder
+from agno.db.sqlite import SqliteDb
 from agno_fastomop.schemas.schemas import SemanticContext
 from agno_fastomop.observability.tracer import get_langfuse_client
 import os
@@ -25,6 +26,7 @@ def create_database_agent(mcp_tools: MCPTools) -> Agent:
 
     agent_config = get_agent_config("database")
     model = create_model(agent_config)
+    db = SqliteDb(db_file="db_agent.db")
 
     # Fetch prompt from Langfuse
     try:
@@ -57,12 +59,15 @@ def create_database_agent(mcp_tools: MCPTools) -> Agent:
         name=agent_config["name"],
         model=model,
         instructions=system_prompt,
+        db=db,
+        enable_user_memories=True,
+        add_history_to_context=True,  # Enable conversation history
         tools=[mcp_tools],
         knowledge=knowledge,
         # input_schema=SemanticContext,  # Parse JSON from semantic agent's output
         # No output_schema - return natural language for final answer
+        # session_state only for JSON-serializable data
         session_state= {
-            "mcp_client": mcp_tools,
             "agent_type": "database_agent",
         },
         reasoning=agent_config.get("reasoning", True),

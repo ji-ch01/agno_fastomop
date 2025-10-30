@@ -4,6 +4,7 @@ from agno_fastomop.agents.factory import create_model
 from agno_fastomop.config import get_agent_config
 from agno_fastomop.schemas.schemas import SemanticContext
 from agno_fastomop.observability.tracer import get_langfuse_client
+from agno.db.sqlite import SqliteDb
 from pathlib import Path
 
 
@@ -20,6 +21,9 @@ def create_semantic_agent(mcp_tools: MCPTools) -> Agent:
 
     agent_config = get_agent_config("semantic")
     model = create_model(agent_config)
+
+    # Use same database as database_agent for shared memory
+    db = SqliteDb(db_file="db_agent.db")
 
     # Fetch prompt from Langfuse
     try:
@@ -38,9 +42,11 @@ def create_semantic_agent(mcp_tools: MCPTools) -> Agent:
         name=agent_config["name"],
         model=model,
         instructions=system_prompt,
+        db=db,  # Shared database for conversation history and memory
         tools=[mcp_tools],  # Shared MCP to query concept table
         # No output_schema - let agent call tools first, then return raw JSON
         reasoning=agent_config.get("reasoning", False),
         markdown=False,  # Don't format as markdown - return raw JSON
+        add_history_to_context=True,  # Enable conversation history
     )
     return agent
