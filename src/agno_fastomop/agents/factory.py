@@ -26,10 +26,14 @@ def create_model(config: Dict) -> Any:
         return OpenAIChat(id=model_id)
     elif model_type == "ollama":
         host = config.get("host")
-        return Ollama(id=model_id, host=host) if host else Ollama(id=model_id)
+        num_ctx = config.get("num_ctx")
+        options = {"num_ctx": num_ctx} if num_ctx else None
+        return Ollama(id=model_id, host=host, options=options)
     elif model_type == "ollama_medgemma_tools":
         from agno_fastomop.models.medgemma_ollama import MedGemmaOllama
         host = config.get("host")
-        return MedGemmaOllama(id=model_id, host=host) if host else MedGemmaOllama(id=model_id)
+        num_ctx = config.get("num_ctx")
+        options = {"num_ctx": num_ctx} if num_ctx else None
+        return MedGemmaOllama(id=model_id, host=host, options=options)
     else:
         raise ValueError(f"Unknown model type: {model_type}")

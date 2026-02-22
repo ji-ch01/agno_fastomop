@@ -71,6 +71,12 @@ def get_agent_config(agent_name:str) -> Dict[str, Any]:
         complete_config["api_version"] = provider_config.get("api_version", "2024-10-21")
         complete_config["temperature"] = provider_config.get("temperature")
 
+    # Pass through Ollama-specific options (num_ctx, host, etc.)
+    if "host" in provider_config:
+        complete_config["host"] = provider_config["host"]
+    if "num_ctx" in provider_config:
+        complete_config["num_ctx"] = provider_config["num_ctx"]
+
     return complete_config
 
 
@@ -92,9 +98,11 @@ def get_team_model_config() -> Dict[str, Any]:
         "MODEL_ID": provider_config["model_id"],
     }
 
-    # Pass through host if present (e.g. for Ollama providers)
+    # Pass through Ollama-specific options
     if "host" in provider_config:
         team_config["host"] = provider_config["host"]
+    if "num_ctx" in provider_config:
+        team_config["num_ctx"] = provider_config["num_ctx"]
 
     return team_config
 

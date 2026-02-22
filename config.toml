@@ -19,14 +19,26 @@ temperature = 0.0  # Deterministic responses
 [models.providers.ollama]
 provider = "ollama"
 model_id = "gpt-oss:20b"
+num_ctx = 32768  # gpt-oss:20b supports 32K; Ollama defaults to 2-8K without this
 
 [models.providers.ollama_light]
 provider = "ollama"
 model_id = "qwen2.5:7b"
+num_ctx = 32768
 
 [models.providers.ollama_medgemma]
 provider = "ollama"
 model_id = "MedAIBase/MedGemma1.5:4b"
+
+[models.providers.ollama_gpt_oss_120b]
+provider = "ollama"
+model_id = "gpt-oss:120b"
+num_ctx = 32768  # Supports 131K natively, but 32K balances KV cache VRAM vs depth on A100 80GB (~65GB weights + ~8GB KV @ 32K)
+
+[models.providers.ollama_qwen3]
+provider = "ollama"
+model_id = "qwen3:30b-a3b"
+num_ctx = 32768
 
 [models.providers.ollama_medgemma_27b]
 provider = "ollama_medgemma_tools"
@@ -64,8 +76,8 @@ markdown = true
 
 [agents.ards_orchestrator]
 name = "ARDS Classification Orchestrator"
-model_provider = "ollama_medgemma_27b"
-prompt_name = "ards_classifier"
+model_provider = "ollama"              # gpt-oss:20b — reliable instruction following + native tool calling
+prompt_name = "ards_classifier"        # Swap to ollama_gpt_oss_120b for 131K context + stronger reasoning (requires 80GB GPU)
 prompt_label = "dev"
 reasoning = false
 markdown = true

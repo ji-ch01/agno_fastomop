@@ -272,12 +272,36 @@ async def initialize():
         with open(ards_prompt_path, "r") as f:
             ards_instructions = f.read()
 
-    # Aggressive compression for 32K context window
+    # Compression for ARDS team — gpt-oss:20b (32K context) or gpt-oss:120b (131K context)
+    #
+    # Goal: compress when summarisation *improves* information density, not just to save space.
+    # A 25K oxygenation dump is harder for the orchestrator to extract PaO2/FiO2/PEEP from
+    # than a 1K summary with the key concurrent values. Compression improves signal-to-noise.
+    #
+    # Token budget for the 8-step ARDS workflow:
+    #   System prompt + tool defs:  ~3K tokens (fixed)
+    #   Typical total:             ~11K tokens (fits in 32K with ~20K headroom)
+    #   Worst case:                ~36K tokens (needs compression to fit 32K)
+    #   The one pathological case: Step 3 oxygenation can return 25K tokens if DB agent
+    #   doesn't LIMIT — that single result exceeds what the model can usefully scan anyway.
+    #
+    # compress_token_limit=5000: per-result threshold for LLM summarisation
+    #   - Typical step outputs (300–3000 tokens): preserved verbatim — model can scan these
+    #   - Large DB results (>5K): summarised to key values — improves extraction accuracy
+    #   - With 32K context and ~3K fixed overhead, this keeps total under 30K even with
+    #     all 8 steps at their compression ceiling
+    #
+    # compress_tool_results_limit=8: keep 8 most recent tool results uncompressed
+    #   - The 8-step workflow has ~10 tool interactions; oldest 2 (semantic extraction,
+    #     first timing query) get summarised by the time Step 7 runs
+    #   - These oldest results are already embedded in later steps' task strings,
+    #     so summarisation loses nothing the orchestrator still needs
+    #   - With gpt-oss:120b (131K context), raise to 12 for full verbatim retention
     ards_compression = CompressionManager(
         model=create_model(ards_model_config),
         compress_tool_results=True,
-        compress_token_limit=6000,
-        compress_tool_results_limit=4,
+        compress_token_limit=5000,
+        compress_tool_results_limit=8,
     )
 
     _ards_team = Team(
