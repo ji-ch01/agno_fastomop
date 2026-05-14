@@ -48,7 +48,7 @@ reasoning = false
 
 [omcp]
 transport = "stdio"
-command = "uv run --directory /Users/k24118093/Documents/omcp_server python src/omcp/main.py"
+command = "uv run --directory c:/Users/33633/Desktop/Efrei/M2/Stage/K-OMOP-CDM/omcp python src/omcp/main.py"
 
 [milvus]
 host = "localhost"

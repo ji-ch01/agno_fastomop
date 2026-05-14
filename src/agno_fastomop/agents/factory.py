@@ -23,6 +23,9 @@ def create_model(config: Dict) -> Any:
                            temperature=config.get("temperature")
                            )
     elif model_type == "openai":
+        base_url = os.getenv("OPENAI_BASE_URL")
+        if base_url:
+            return OpenAIChat(id=model_id, base_url=base_url)
         return OpenAIChat(id=model_id)
     elif model_type == "ollama":
         return Ollama(id=model_id)
